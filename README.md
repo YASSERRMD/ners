@@ -1,25 +1,22 @@
 # NERS - High-Performance Web Server Kernel
 
-A lock-free, single-threaded web server kernel written in Rust using a 6-stage pipeline architecture.
+A lock-free, multi-core web server kernel written in Rust with a 6-stage pipeline architecture.
 
 ## Architecture
 
 ```
 Network → [NetIn] → [Parse] → [Route] → [App] → [Encode] → [NetOut] → Network
-
-         Shared Memory
-      +----------------+
-      | Slab<ConnState>|  (all connection buffers & metadata)
-      | MetricsSnapshot|  (per-stage metrics)
-      +----------------+
+             ↓          ↓         ↓         ↓         ↓          ↓
+          Core 0     Core 1    Core 2    Core 3    Core 4     Core 5
 ```
 
 ## Features
 
-- **Lock-free**: No mutexes in the critical path
+- **Multi-Core**: Each stage runs on a dedicated CPU core
+- **Lock-free**: Minimal contention with atomic queues
 - **Zero-copy**: Slab allocator for connection state
 - **Observable**: Built-in per-stage metrics
-- **Fast**: Target >5k req/sec on single thread
+- **Cross-platform**: Works on Linux and macOS
 
 ## Project Structure
 
@@ -30,9 +27,13 @@ ners/
 │   │   ├── conn.rs      # Connection slab
 │   │   ├── queue.rs     # Lock-free ring queue
 │   │   ├── net.rs       # TCP I/O
+│   │   ├── mux.rs       # I/O multiplexer
+│   │   ├── affinity.rs  # CPU core pinning
+│   │   ├── executor.rs  # Stage executor
+│   │   ├── orchestrator.rs # Multi-stage manager
 │   │   ├── stage.rs     # 6-stage pipeline
 │   │   ├── handlers.rs  # Route handlers
-│   │   └── main.rs      # Event loop
+│   │   └── main.rs      # Multi-threaded entry
 │   ├── tests/
 │   └── benches/
 ├── ners-proto-http/     # HTTP/1.1 parser
@@ -50,8 +51,9 @@ cargo build --release
 ### Run Server
 
 ```bash
-cargo run --release
+RUST_LOG=info cargo run --release
 # Listening on 0.0.0.0:8080
+# Spawns dedicated threads per stage
 ```
 
 ### Test Endpoints
@@ -62,9 +64,6 @@ curl http://localhost:8080/
 
 curl http://localhost:8080/api/test
 # {"status": "ok", "message": "NERS Phase 1"}
-
-curl http://localhost:8080/nonexistent
-# 404 Not Found
 ```
 
 ### Run Tests
@@ -73,21 +72,12 @@ curl http://localhost:8080/nonexistent
 cargo test
 ```
 
-### Run Benchmarks
+## Phase Roadmap
 
-```bash
-# Start server in one terminal, then:
-cargo bench --bench phase1
-```
-
-## Phase 1 Goals
-
-- [x] Single-threaded event loop
-- [x] 6-stage pipeline (NetIn, Parse, Route, App, Encode, NetOut)
-- [x] Lock-free inter-stage queues
-- [x] Non-blocking TCP I/O
-- [x] HTTP/1.1 parser
-- [x] Per-stage metrics collection
+- [x] **Phase 1**: Single-threaded kernel (5k req/sec)
+- [x] **Phase 2**: Multi-core with io_uring compatibility (target: 50k+ req/sec)
+- [ ] **Phase 3**: Distributed consensus
+- [ ] **Phase 4**: AI-native control plane
 
 ## License
 
