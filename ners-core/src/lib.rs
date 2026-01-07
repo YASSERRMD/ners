@@ -2,9 +2,9 @@
 //!
 //! This crate contains the core data structures and stages for the NERS web server.
 //! 
-//! ## Architecture (Phase 3)
+//! ## Architecture (Phase 4B)
 //! 
-//! Each stage runs on a dedicated core with self-adaptive tuning:
+//! Each stage runs on a dedicated core with per-core slab sharding:
 //! NetIn → Parse → Route → App → Encode → NetOut
 
 pub mod affinity;
@@ -17,5 +17,6 @@ pub mod net;
 pub mod orchestrator;
 pub mod policy;
 pub mod queue;
+pub mod slab;
 pub mod stage;
 pub mod tuner;
