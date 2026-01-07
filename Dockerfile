@@ -33,6 +33,7 @@ COPY ners-proto-http/src ners-proto-http/src
 COPY ners-metrics/src ners-metrics/src
 COPY ners-ml/src ners-ml/src
 COPY ners-core/benches ners-core/benches
+COPY assets assets
 
 # Touch to invalidate cache
 RUN touch ners-core/src/main.rs
