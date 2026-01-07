@@ -33,6 +33,7 @@ pub struct HttpRequest {
 /// HTTP/1.1 request parser
 pub struct HttpParser {
     /// Minimum bytes needed before attempting to parse
+    #[allow(dead_code)]
     min_bytes: usize,
 }
 

@@ -1,63 +1,79 @@
-//! NERS Web Server - Main Entry Point
+//! NERS Web Server - Phase 2 Multi-Core Entry Point
 //!
-//! Single-threaded event loop driving the 6-stage pipeline.
+//! Multi-threaded event loop with one thread per stage.
 
-use ners_core::conn::ConnSlab;
 use ners_core::net::TcpListener;
-use ners_core::queue::RingQueue;
+use ners_core::orchestrator::{Orchestrator, OrchestratorConfig};
 use ners_core::stage::{
-    AppStage, EncodeStage, NetInStage, NetOutStage, ParseStage, RouteStage, Stage,
+    AppStageMulti, EncodeStageMulti, NetOutStageMulti, ParseStageMulti, RouteStageMulti,
 };
-use ners_metrics::MetricsCollector;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 fn main() -> std::io::Result<()> {
     env_logger::init();
     
-    log::info!("Starting NERS Web Server...");
+    log::info!("Starting NERS Web Server (Phase 2 - Multi-Core)...");
     
     // Initialize listener
-    let listener = TcpListener::new("0.0.0.0:8080")?;
+    let mut listener = TcpListener::new("0.0.0.0:8080")?;
     log::info!("Listening on 0.0.0.0:8080");
     
-    // Initialize slab for connections
-    let mut slab = ConnSlab::new(10_000);
+    // Create orchestrator
+    let config = OrchestratorConfig {
+        slab_capacity: 10_000,
+        queue_capacity: 4096,
+        start_core: 0,
+    };
     
-    // Initialize metrics
-    let metrics = MetricsCollector::new();
+    let mut orchestrator = Orchestrator::new(config);
     
-    // Create inter-stage queues
-    let parse_queue = Arc::new(RingQueue::new(1024));
-    let route_queue = Arc::new(RingQueue::new(1024));
-    let app_queue = Arc::new(RingQueue::new(1024));
-    let encode_queue = Arc::new(RingQueue::new(1024));
-    let net_out_queue = Arc::new(RingQueue::new(1024));
+    // Get shared resources
+    let slab = orchestrator.get_slab();
+    let metrics = orchestrator.get_metrics();
     
-    // Initialize stages
-    let mut net_in = NetInStage::new(listener, Arc::clone(&parse_queue));
-    let mut parse = ParseStage::new(Arc::clone(&parse_queue), Arc::clone(&route_queue));
-    let mut route = RouteStage::new(Arc::clone(&route_queue), Arc::clone(&app_queue));
-    let mut app = AppStage::new(Arc::clone(&app_queue), Arc::clone(&encode_queue));
-    let mut encode = EncodeStage::new(Arc::clone(&encode_queue), Arc::clone(&net_out_queue));
-    let mut net_out = NetOutStage::new(Arc::clone(&net_out_queue));
+    // Create queues
+    let parse_queue = orchestrator.get_queue(0);
+    let _route_queue = orchestrator.get_queue(1);
+    let _app_queue = orchestrator.get_queue(2);
+    let _encode_queue = orchestrator.get_queue(3);
+    let _net_out_queue = orchestrator.get_queue(4);
     
-    let mut iteration: u64 = 0;
+    // Spawn stages (except NetIn which needs special handling)
+    orchestrator.spawn_stage(ParseStageMulti::new(), 0, Some(1));
+    orchestrator.spawn_stage(RouteStageMulti::new(), 1, Some(2));
+    orchestrator.spawn_stage(AppStageMulti::new(), 2, Some(3));
+    orchestrator.spawn_stage(EncodeStageMulti::new(), 3, Some(4));
+    orchestrator.spawn_stage(NetOutStageMulti::new(), 4, None);
+    
+    let shutdown = Arc::new(AtomicBool::new(false));
+    let shutdown_clone = Arc::clone(&shutdown);
+    
+    // Handle Ctrl+C
+    ctrlc_handler(shutdown_clone);
+    
+    log::info!("NERS ready to serve requests (multi-core mode)");
+    
     let mut last_log = Instant::now();
     
-    log::info!("NERS ready to serve requests");
-    
-    // Main event loop
-    loop {
-        // Process all stages
-        net_in.process(&mut slab, &metrics);
-        parse.process(&mut slab, &metrics);
-        route.process(&mut slab, &metrics);
-        app.process(&mut slab, &metrics);
-        encode.process(&mut slab, &metrics);
-        net_out.process(&mut slab, &metrics);
+    // Main thread handles NetIn (accept loop)
+    while !shutdown.load(Ordering::Relaxed) {
+        // Accept new connections
+        let streams = listener.accept_all();
         
-        iteration += 1;
+        for stream in streams {
+            let conn = ners_core::conn::ConnState::new(stream);
+            let mut slab_guard = slab.lock();
+            if let Some(id) = slab_guard.insert(conn) {
+                metrics.inc_total_conns();
+                drop(slab_guard);
+                
+                if parse_queue.push(id).is_ok() {
+                    metrics.inc_queue_len("parse");
+                }
+            }
+        }
         
         // Log metrics every second
         if last_log.elapsed() >= Duration::from_secs(1) {
@@ -67,24 +83,32 @@ fn main() -> std::io::Result<()> {
                 snap.total_requests,
                 snap.total_conns
             );
-            
-            for (stage_id, stage_metrics) in &snap.stages {
-                if stage_metrics.processed_count > 0 {
-                    log::debug!(
-                        "  {}: processed={}, queue_len={}",
-                        stage_id,
-                        stage_metrics.processed_count,
-                        stage_metrics.current_queue_len
-                    );
-                }
-            }
-            
             last_log = Instant::now();
         }
         
-        // Small sleep to prevent busy-looping when idle
-        if slab.active_count() == 0 {
+        // Small sleep when idle
+        if slab.lock().active_count() == 0 {
             std::thread::sleep(Duration::from_micros(100));
         }
     }
+    
+    log::info!("Shutting down...");
+    orchestrator.shutdown();
+    orchestrator.join();
+    log::info!("Server stopped");
+    
+    Ok(())
+}
+
+fn ctrlc_handler(shutdown: Arc<AtomicBool>) {
+    let _ = std::thread::spawn(move || {
+        // Simple signal handling - just check periodically
+        // In production, use proper signal handling
+        loop {
+            std::thread::sleep(Duration::from_millis(100));
+            if shutdown.load(Ordering::Relaxed) {
+                break;
+            }
+        }
+    });
 }

@@ -9,6 +9,9 @@ log = { workspace = true }
 env_logger = { workspace = true }
 thiserror = { workspace = true }
 crossbeam = { workspace = true }
+nix = { workspace = true }
+libc = { workspace = true }
+parking_lot = { workspace = true }
 ners-proto-http = { path = "../ners-proto-http" }
 ners-metrics = { path = "../ners-metrics" }
 
