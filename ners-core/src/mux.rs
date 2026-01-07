@@ -27,6 +27,7 @@ pub enum IoEvent {
 
 /// Pending I/O operation
 #[derive(Debug)]
+#[allow(dead_code)]
 enum PendingOp {
     Accept { listener_fd: RawFd },
     Read { conn_id: ConnId },

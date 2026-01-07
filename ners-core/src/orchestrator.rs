@@ -5,7 +5,6 @@
 use crate::affinity::available_cores;
 use crate::conn::ConnSlab;
 use crate::executor::{ExecutableStage, StageExecutor};
-use crate::mux::IoMultiplexer;
 use crate::queue::RingQueue;
 use ners_metrics::MetricsCollector;
 use parking_lot::Mutex;
@@ -150,6 +149,7 @@ impl Orchestrator {
 mod tests {
     use super::*;
     use crate::conn::ConnId;
+    use crate::mux::IoMultiplexer;
 
     struct DummyStage;
 
