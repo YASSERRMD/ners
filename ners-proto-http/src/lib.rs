@@ -1,14 +1,9 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+//! NERS HTTP Protocol Library
+//!
+//! Provides zero-copy HTTP/1.1 parsing and response generation.
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+pub mod parser;
+pub mod response;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+pub use parser::{HttpParser, HttpRequest, ParseError};
+pub use response::HttpResponse;
