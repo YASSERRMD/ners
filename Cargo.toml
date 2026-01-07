@@ -3,6 +3,7 @@ members = [
     "ners-core",
     "ners-proto-http",
     "ners-metrics",
+    "ners-ml",
 ]
 resolver = "2"
 
