@@ -1,0 +1,24 @@
+[package]
+name = "ners-core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bytes = { workspace = true }
+log = { workspace = true }
+env_logger = { workspace = true }
+thiserror = { workspace = true }
+crossbeam = { workspace = true }
+ners-proto-http = { path = "../ners-proto-http" }
+ners-metrics = { path = "../ners-metrics" }
+
+[[bin]]
+name = "ners"
+path = "src/main.rs"
+
+[dev-dependencies]
+criterion = { workspace = true }
+
+[[bench]]
+name = "phase1"
+harness = false
