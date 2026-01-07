@@ -72,6 +72,12 @@ impl HttpResponse {
         self
     }
 
+    /// Set content type to HTML
+    pub fn html(mut self) -> Self {
+        self.headers.insert("Content-Type".to_string(), "text/html; charset=utf-8".to_string());
+        self
+    }
+
     /// Serialize the response to bytes
     pub fn to_bytes(&self) -> Bytes {
         let mut buf = BytesMut::with_capacity(256 + self.body.len());
