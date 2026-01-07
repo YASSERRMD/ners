@@ -355,6 +355,7 @@ name = "ners-proto-http"
 version = "0.1.0"
 dependencies = [
  "bytes",
+ "log",
  "thiserror",
 ]
 
