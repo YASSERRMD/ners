@@ -1,0 +1,11 @@
+[package]
+name = "ners-ml"
+version = "0.1.0"
+edition = "2021"
+description = "ML Policy Bridge for NERS"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+log = { workspace = true }
+thiserror = { workspace = true }
