@@ -1,0 +1,27 @@
+# Dependencies
+target/
+Cargo.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Todo folder (internal)
+todo/
+
+# Build artifacts
+*.o
+*.a
+*.so
+*.dylib
+
+# Test artifacts
+*.profraw
+lcov.info
+tarpaulin-report.html

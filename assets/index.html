@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NERS - Neuro-Elastic Rust Server</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #00D4FF;
+            --secondary: #8B5CF6;
+            --bg-dark: #0a0a1a;
+            --bg-card: rgba(20, 20, 40, 0.8);
+            --text: #e0e0e0;
+            --text-muted: #888;
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Animated background */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: 
+                radial-gradient(ellipse at 20% 50%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(0, 212, 255, 0.05) 0%, transparent 50%);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        /* Header */
+        header {
+            text-align: center;
+            padding: 4rem 0;
+        }
+        
+        .logo {
+            width: 200px;
+            height: auto;
+            margin-bottom: 1rem;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        h1 {
+            font-size: 3rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+        }
+        
+        .tagline {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+        
+        /* Stats Grid */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 3rem 0;
+        }
+        
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 40px rgba(0, 212, 255, 0.2);
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .stat-label {
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        /* Features */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 4rem 0;
+        }
+        
+        .feature {
+            background: var(--bg-card);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+        }
+        
+        .feature h3 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .feature h3::before {
+            content: '⚡';
+        }
+        
+        .feature p {
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+        
+        /* Status */
+        .status {
+            text-align: center;
+            margin: 4rem 0;
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            color: #00FF88;
+            font-weight: 500;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background: #00FF88;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 4rem;
+        }
+        
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        
+        footer a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 { font-size: 2rem; }
+            .logo { width: 150px; }
+            .stat-value { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation"></div>
+    
+    <div class="container">
+        <header>
+            <img src="/assets/logo.png" alt="NERS Logo" class="logo" onerror="this.style.display='none'">
+            <h1>NERS</h1>
+            <p class="tagline">Neuro-Elastic Rust Server — High-Performance Web Kernel</p>
+            
+            <div class="status">
+                <span class="status-badge">
+                    <span class="status-dot"></span>
+                    Server Running
+                </span>
+            </div>
+        </header>
+        
+        <section class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="throughput">200K+</div>
+                <div class="stat-label">Requests/Second</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">&lt;2ms</div>
+                <div class="stat-label">p99 Latency</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">100+</div>
+                <div class="stat-label">HTTP/2 Streams</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">0%</div>
+                <div class="stat-label">Lock Contention</div>
+            </div>
+        </section>
+        
+        <section class="features">
+            <div class="feature">
+                <h3>Multi-Core Architecture</h3>
+                <p>Stage-per-core design with CPU affinity. Each pipeline stage runs on a dedicated core for maximum parallelism and cache locality.</p>
+            </div>
+            <div class="feature">
+                <h3>HTTP/2 Multiplexing</h3>
+                <p>Full HTTP/2 support with HPACK compression, stream multiplexing, and flow control. Handle hundreds of concurrent streams per connection.</p>
+            </div>
+            <div class="feature">
+                <h3>Self-Adaptive Tuning</h3>
+                <p>Behavioral autotuning with ML-driven policies. The server automatically adjusts queue sizes, batching, and backpressure based on workload.</p>
+            </div>
+            <div class="feature">
+                <h3>Lock-Free Sharding</h3>
+                <p>Per-core slab allocation with NUMA awareness. Zero lock contention through intelligent memory partitioning.</p>
+            </div>
+            <div class="feature">
+                <h3>io_uring Ready</h3>
+                <p>Optimized for Linux io_uring with a compatibility layer for other platforms. Batch I/O operations for maximum efficiency.</p>
+            </div>
+            <div class="feature">
+                <h3>Observable</h3>
+                <p>Built-in per-stage metrics with trend detection, bottleneck identification, and real-time monitoring endpoints.</p>
+            </div>
+        </section>
+        
+        <footer>
+            <p>NERS v0.1.0 | Built with Rust 🦀</p>
+            <p><a href="https://github.com/YASSERRMD/ners">GitHub</a></p>
+        </footer>
+    </div>
+    
+    <script>
+        // Simple animation for throughput counter
+        const throughputEl = document.getElementById('throughput');
+        let count = 0;
+        const target = 200;
+        const duration = 2000;
+        const step = target / (duration / 16);
+        
+        function animate() {
+            count += step;
+            if (count < target) {
+                throughputEl.textContent = Math.floor(count) + 'K+';
+                requestAnimationFrame(animate);
+            } else {
+                throughputEl.textContent = target + 'K+';
+            }
+        }
+        
+        // Start animation when page loads
+        setTimeout(animate, 500);
+    </script>
+</body>
+</html>
