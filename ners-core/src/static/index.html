@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NERS - Neuro-Elastic Rust Server</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Light theme (default) */
+            --bg-page: #f0f4f8;
+            --bg-card: rgba(255, 255, 255, 0.8);
+            --text-main: #1a202c;
+            --text-muted: #4a5568;
+            --primary: #00D4FF;
+            --secondary: #8B5CF6;
+            --border: rgba(0, 0, 0, 0.1);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                /* Dark theme */
+                --bg-page: #0a0a1a;
+                --bg-card: rgba(20, 20, 40, 0.8);
+                --text-main: #e0e0e0;
+                --text-muted: #888;
+                --border: rgba(255, 255, 255, 0.1);
+            }
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg-page);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        /* Animated background mesh logic handled via CSS gradients */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background:
+                radial-gradient(ellipse at 20% 50%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(0, 212, 255, 0.05) 0%, transparent 50%);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            /* Reduced spacing */
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            padding: 2rem 0;
+            /* Reduced padding */
+        }
+
+        .logo {
+            width: 180px;
+            height: auto;
+            margin-bottom: 0.5rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.25rem;
+        }
+
+        .tagline {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        /* Stats Grid */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        /* Features */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .feature {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .feature h3 {
+            color: var(--text-main);
+            /* Adaptive color */
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .feature h3::before {
+            content: '⚡';
+            font-size: 1.2rem;
+        }
+
+        .feature p {
+            color: var(--text-muted);
+            line-height: 1.5;
+            font-size: 0.95rem;
+        }
+
+        /* Status */
+        .status {
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            color: #00ca6d;
+            /* Darker green for contrast on light mode */
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .status-badge {
+                color: #00FF88;
+            }
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: currentColor;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        footer a:hover {
+            color: var(--secondary);
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+                gap: 1.5rem;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .logo {
+                width: 140px;
+            }
+
+            .stat-value {
+                font-size: 1.75rem;
+            }
+
+            .features {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-animation"></div>
+
+    <div class="container">
+        <header>
+            <!-- Embedded Base64 Logo -->
+            <img src="data:image/png;base64,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"
+                alt="NERS Logo" class="logo">
+            <h1>NERS</h1>
+            <p class="tagline">Neuro-Elastic Rust Server — High-Performance Web Kernel</p>
+
+            <div class="status">
+                <span class="status-badge">
+                    <span class="status-dot"></span>
+                    Server Running
+                </span>
+            </div>
+        </header>
+
+        <section class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="throughput">200K+</div>
+                <div class="stat-label">Request/Sec</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">&lt;2ms</div>
+                <div class="stat-label">p99 Latency</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">100+</div>
+                <div class="stat-label">HTTP/2 Streams</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">0%</div>
+                <div class="stat-label">Lock Contention</div>
+            </div>
+        </section>
+
+        <section class="features">
+            <div class="feature">
+                <h3>Multi-Core Architecture</h3>
+                <p>Stage-per-core design with CPU affinity. Each pipeline stage runs on a dedicated core for maximum
+                    parallelism and cache locality.</p>
+            </div>
+            <div class="feature">
+                <h3>HTTP/2 Multiplexing</h3>
+                <p>Full HTTP/2 support with HPACK compression, stream multiplexing, and flow control. Handle hundreds of
+                    concurrent streams per connection.</p>
+            </div>
+            <div class="feature">
+                <h3>Self-Adaptive Tuning</h3>
+                <p>Behavioral autotuning with ML-driven policies. The server automatically adjusts queue sizes,
+                    batching, and backpressure.</p>
+            </div>
+            <div class="feature">
+                <h3>Lock-Free Sharding</h3>
+                <p>Per-core slab allocation with NUMA awareness. Zero lock contention through intelligent memory
+                    partitioning.</p>
+            </div>
+            <div class="feature">
+                <h3>io_uring Ready</h3>
+                <p>Optimized for Linux io_uring with a compatibility layer for other platforms. Batch I/O operations for
+                    maximum efficiency.</p>
+            </div>
+            <div class="feature">
+                <h3>Observable</h3>
+                <p>Built-in per-stage metrics with trend detection, bottleneck identification, and real-time monitoring
+                    endpoints.</p>
+            </div>
+        </section>
+
+        <footer>
+            <p>NERS v0.1.0 | Built with Rust 🦀</p>
+            <p><a href="https://github.com/YASSERRMD/ners">GitHub</a></p>
+            <p style="margin-top: 0.5rem; font-size: 0.8rem; opacity: 0.7;">
+                <script>document.write(new Date().getFullYear())</script>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // Simple animation for throughput counter
+        const throughputEl = document.getElementById('throughput');
+        let count = 0;
+        const target = 200;
+        const duration = 2000;
+        const step = target / (duration / 16);
+
+        function animate() {
+            count += step;
+            if (count < target) {
+                throughputEl.textContent = Math.floor(count) + 'K+';
+                requestAnimationFrame(animate);
+            } else {
+                throughputEl.textContent = target + 'K+';
+            }
+        }
+
+        // Start animation when page loads
+        setTimeout(animate, 500);
+    </script>
+</body>
+
+</html>

@@ -6,7 +6,7 @@ use crate::conn::ConnState;
 use ners_proto_http::HttpResponse;
 
 /// The landing page HTML
-const LANDING_PAGE: &str = include_str!("../../assets/index.html");
+const LANDING_PAGE: &str = include_str!("static/index.html");
 
 /// Handle the root path - Landing page
 pub fn handle_hello(conn: &mut ConnState) {

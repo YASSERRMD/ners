@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/logo.png" alt="NERS Logo" width="200">
+  <img src="https://raw.githubusercontent.com/YASSERRMD/ners/misc/assets/logo.png" alt="NERS Logo" width="200">
 </p>
 
 <h1 align="center">NERS</h1>

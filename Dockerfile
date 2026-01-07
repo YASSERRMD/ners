@@ -33,7 +33,7 @@ COPY ners-proto-http/src ners-proto-http/src
 COPY ners-metrics/src ners-metrics/src
 COPY ners-ml/src ners-ml/src
 COPY ners-core/benches ners-core/benches
-COPY assets assets
+
 
 # Touch to invalidate cache
 RUN touch ners-core/src/main.rs
@@ -55,7 +55,7 @@ RUN apt-get update && apt-get install -y \
 COPY --from=builder /app/target/release/ners /usr/local/bin/ners
 
 # Copy assets
-COPY assets /app/assets
+
 
 # Create non-root user
 RUN useradd -r -s /bin/false ners && \
