@@ -3,7 +3,7 @@
 //! Implements the 6-stage request processing pipeline:
 //! NetIn → Parse → Route → App → Encode → NetOut
 
-use crate::conn::{ConnId, ConnLifecycle, ConnSlab, ConnState, RouteId};
+use crate::conn::{ConnLifecycle, ConnSlab, ConnState, RouteId};
 use crate::handlers::{handle_hello, handle_json, handle_not_found};
 use crate::net::{read_all, write_all, TcpListener};
 use crate::queue::RingQueue;
@@ -99,7 +99,7 @@ impl Stage for ParseStage {
             
             // Try to parse the request
             match self.parser.parse(&conn.read_buf) {
-                Ok((request, consumed)) => {
+                Ok((request, _consumed)) => {
                     // Successfully parsed
                     conn.request_method = Some(request.method);
                     conn.request_path = Some(request.path);
@@ -240,7 +240,7 @@ impl Stage for EncodeStage {
         "encode"
     }
 
-    fn process(&mut self, slab: &mut ConnSlab, metrics: &MetricsCollector) {
+    fn process(&mut self, _slab: &mut ConnSlab, _metrics: &MetricsCollector) {
         // Currently a pass-through since handlers already build HTTP responses
         for _ in 0..100 {
             let id = match self.input_queue.pop() {

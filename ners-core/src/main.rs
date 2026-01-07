@@ -42,7 +42,7 @@ fn main() -> std::io::Result<()> {
     let mut encode = EncodeStage::new(Arc::clone(&encode_queue), Arc::clone(&net_out_queue));
     let mut net_out = NetOutStage::new(Arc::clone(&net_out_queue));
     
-    let mut iteration: u64 = 0;
+    let mut _iteration: u64 = 0;
     let mut last_log = Instant::now();
     
     log::info!("NERS ready to serve requests");
@@ -57,7 +57,7 @@ fn main() -> std::io::Result<()> {
         encode.process(&mut slab, &metrics);
         net_out.process(&mut slab, &metrics);
         
-        iteration += 1;
+        _iteration += 1;
         
         // Log metrics every second
         if last_log.elapsed() >= Duration::from_secs(1) {
